@@ -1,3 +1,4 @@
+// models/User.js - UPDATED
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
@@ -14,6 +15,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ["farmer", "admin", "expert"],
+    default: "farmer"
+  },
+  phone: {
+    type: String,
+  },
+  location: {
+    district: String,
+    village: String
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
 const User = mongoose.model("User", userSchema);

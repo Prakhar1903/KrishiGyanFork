@@ -1,11 +1,11 @@
+// controllers/authController.js - UPDATED
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// 🧾 Register user
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, location } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -13,16 +13,38 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({ 
+      name, 
+      email, 
+      password: hashedPassword,
+      phone,
+      location,
+      role: "farmer"
+    });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully ✅" });
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(201).json({ 
+      message: "Farmer registered successfully ✅",
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        location: newUser.location
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 🔐 Login user
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -36,12 +58,22 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials ❌" });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.json({ message: "Login successful ✅", token });
+    res.json({ 
+      message: "Login successful ✅", 
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        location: user.location
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
