@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.1",
+    "@teachablemachine/image": "^0.8.5",
+    "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.13.2",
     "lucide-react": "^0.553.0",
     "react": "^19.2.0",

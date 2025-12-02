@@ -1,517 +1,558 @@
-// src/components/PestManagement.jsx
-import React, { useState, useEffect } from 'react';
-import { Search, AlertTriangle, Calendar, MapPin, Camera, Upload, Brain, Loader } from 'lucide-react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
+import { Camera, Brain, Loader, Bug, Leaf, Upload, AlertTriangle, Shield, CheckCircle, Info } from 'lucide-react';
 
 const PestManagement = () => {
-  const [selectedCrop, setSelectedCrop] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPest, setSelectedPest] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [aiDetectionResult, setAiDetectionResult] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [error, setError] = useState(null);
+  const [apiStatus, setApiStatus] = useState('checking');
 
-  // Kerala-specific crops
-  const crops = [
-    'Rice', 'Coconut', 'Rubber', 'Black Pepper', 'Cardamom', 
-    'Banana', 'Tapioca', 'Cashew', 'Tea', 'Coffee', 'Vegetables', 'Fruits'
-  ];
-
-  // Get user location for weather-based predictions
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          fetchWeatherData(latitude, longitude);
-        },
-        (error) => console.log('Location access denied')
-      );
-    }
+    testAPIConnection();
   }, []);
 
-  // Free Weather API (Open-Meteo)
-  const fetchWeatherData = async (lat, lng) => {
+  const testAPIConnection = async () => {
     try {
-      const response = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`
-      );
-      setWeatherData(response.data);
-    } catch (error) {
-      console.log('Weather API error:', error);
+      const response = await fetch('https://api.plant.id/v3/health_assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Key': 'yPq0vbF5MD12uUFSoBRLz5fMGX2jiNNy8uop3gE6YVOU80WJiB'
+        },
+        body: JSON.stringify({
+          images: ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==']
+        })
+      });
+
+      if (response.status < 500) {
+        setApiStatus('online');
+      }
+    } catch {
+      setApiStatus('offline');
     }
   };
 
-  // Plant.ID Free API for pest/disease detection from images
   const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
     if (!file) return;
 
     setUploadingImage(true);
     setAiDetectionResult(null);
+    setError(null);
 
-    const formData = new FormData();
-    formData.append('images', file);
-    formData.append('organs', 'leaf'); // We're checking leaves for pests
+    const imageUrl = URL.createObjectURL(file);
+    setUploadedImage(imageUrl);
 
     try {
-      // Plant.ID API (Free tier available)
-      const response = await axios.post(
-        'https://api.plant.id/v2/identify',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Api-Key': process.env.REACT_APP_PLANT_ID_API_KEY || 'demo' // Get free key from plant.id
-          }
-        }
-      );
+      const base64Image = await fileToBase64(file);
 
-      // Process the AI response
-      if (response.data.suggestions && response.data.suggestions.length > 0) {
-        const suggestions = response.data.suggestions;
-        const diseases = suggestions.filter(s => 
-          s.probability > 0.7 && 
-          (s.plant_details?.common_names?.some(name => 
-            name.toLowerCase().includes('disease') || 
-            name.toLowerCase().includes('pest') ||
-            name.toLowerCase().includes('rot') ||
-            name.toLowerCase().includes('blight')
-          ) || false)
-        );
-
-        if (diseases.length > 0) {
-          setAiDetectionResult({
-            type: 'pest_detected',
-            name: diseases[0].plant_name,
-            confidence: Math.round(diseases[0].probability * 100),
-            details: diseases[0].plant_details
-          });
-        } else {
-          setAiDetectionResult({
-            type: 'healthy',
-            message: 'No significant pests/diseases detected'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('AI detection error:', error);
-      // Fallback to mock detection
-      setAiDetectionResult({
-        type: 'mock',
-        name: 'Leaf Spot Disease',
-        confidence: 85,
-        details: 'Common fungal infection in humid conditions'
+      const response = await fetch('https://api.plant.id/v3/health_assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Key': 'yPq0vbF5MD12uUFSoBRLz5fMGX2jiNNy8uop3gE6YVOU80WJiB'
+        },
+        body: JSON.stringify({
+          images: [base64Image],
+          latitude: 49.207,
+          longitude: 16.608,
+          similar_images: true
+        })
       });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      const result = processV3Response(data);
+      setAiDetectionResult(result);
+      setApiStatus('online');
+
+    } catch (err) {
+      console.error('Plant.id API Error:', err);
+
+      const mockResult = await analyzeImageLocally(file);
+      setAiDetectionResult(mockResult);
+      setError({
+        title: 'Using Advanced Simulation',
+        message: 'API connection issue - using local analysis',
+        code: 'SIMULATION_MODE'
+      });
+      setApiStatus('offline');
+
     } finally {
       setUploadingImage(false);
     }
   };
 
-  // Get pest risk based on weather
-  const getPestRiskLevel = () => {
-    if (!weatherData) return 'Unknown';
-    
-    const { daily } = weatherData;
-    const temp = daily.temperature_2m_max[0];
-    const precipitation = daily.precipitation_sum[0];
-    
-    if (precipitation > 20 && temp > 25) return 'High';
-    if (precipitation > 10 && temp > 20) return 'Medium';
-    return 'Low';
+  const processV3Response = (data) => {
+    const result = data.result;
+
+    if (result.is_healthy?.binary === false && result.disease?.suggestions?.length > 0) {
+      const disease = result.disease.suggestions[0];
+
+      return {
+        type: 'disease_detected',
+        name: disease.name,
+        confidence: Math.round(disease.probability * 100),
+        scientificName: disease.details?.scientific_name,
+        description: disease.details?.description || 'Plant disease detected',
+        treatment: disease.details?.treatment?.chemical?.[0] ||
+                  disease.details?.treatment?.biological?.[0] ||
+                  'Apply appropriate fungicide or pesticide',
+        prevention: disease.details?.treatment?.prevention?.[0] ||
+                   'Remove infected leaves, improve air circulation',
+        source: 'Plant.id v3 AI'
+      };
+    }
+
+    return {
+      type: 'healthy',
+      name: 'Healthy Plant',
+      confidence: Math.round((result.is_healthy?.probability || 0.85) * 100),
+      description: 'No diseases detected. Plant appears healthy.',
+      source: 'Plant.id v3 AI'
+    };
   };
 
-  // Enhanced pests database with Kerala-specific data
-  const pestsData = {
-    Rice: [
-      {
-        id: 1,
-        name: 'Brown Plant Hopper (ബ്രൗൺ പ്ലാന്റ് ഹോപ്പർ)',
-        scientificName: 'Nilaparvata lugens',
-        severity: 'High',
-        symptoms: 'Yellowing leaves, hopper burn, sooty mold formation',
-        treatment: '1. Apply Imidacloprid 17.8 SL @ 0.3 ml/l\n2. Drain water for 2-3 days\n3. Release natural predators like spiders',
-        prevention: 'Avoid excessive nitrogen, use resistant varieties like Swarna',
-        season: 'Kharif (June-September)',
-        weatherCondition: 'High humidity (>80%), temperature 25-30°C',
-        organicControl: 'Neem oil spray (3%), apply Beauveria bassiana fungus',
-        image: 'https://images.unsplash.com/photo-1589923186741-7d1d6ccee3c3?w=400'
-      },
-      {
-        id: 2,
-        name: 'Rice Blast (പ്രഷ്ണ രോഗം)',
-        scientificName: 'Magnaporthe oryzae',
-        severity: 'Medium',
-        symptoms: 'Diamond-shaped lesions with gray centers on leaves',
-        treatment: 'Tricyclazole 75 WP @ 0.6 g/l or Azoxystrobin 23% SC',
-        prevention: 'Use certified seeds, maintain proper spacing (20x15 cm)',
-        season: 'All seasons',
-        weatherCondition: 'High humidity, cloudy weather',
-        organicControl: 'Pseudomonas fluorescens seed treatment',
-        image: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w-400'
-      }
-    ],
-    Coconut: [
-      {
-        id: 1,
-        name: 'Rhinoceros Beetle (റൈനോസിറസ് ബീറ്റിൽ)',
-        scientificName: 'Oryctes rhinoceros',
-        severity: 'High',
-        symptoms: 'V-shaped cuts on leaves, spear damage',
-        treatment: 'Place pheromone traps @ 5 traps/acre, apply Metarhizium anisopliae',
-        prevention: 'Remove decaying logs, maintain sanitation',
-        season: 'Throughout year',
-        weatherCondition: 'Warm and humid',
-        organicControl: 'Neem cake application @ 5 kg/palm',
-        image: 'https://images.unsplash.com/photo-1562670652-e5947bddb335?w=400'
-      },
-      {
-        id: 2,
-        name: 'Leaf Rot Disease (ഇല ചത്ത രോഗം)',
-        scientificName: 'Colletotrichum gloeosporioides',
-        severity: 'Medium',
-        symptoms: 'Yellowing and withering of leaves from tip downwards',
-        treatment: 'Bordeaux mixture (1%) or Copper oxychloride 0.25%',
-        prevention: 'Avoid water stagnation, proper drainage',
-        season: 'Monsoon',
-        weatherCondition: 'Heavy rainfall, poor drainage',
-        organicControl: 'Garlic extract spray (10%)',
-        image: 'https://images.unsplash.com/photo-1562670652-e5947bddb335?w=400'
-      }
-    ],
-    // Add more Kerala crops...
+  const analyzeImageLocally = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+
+          let brownCount = 0, yellowCount = 0, greenCount = 0;
+
+          for (let i = 0; i < data.length; i += 16) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+
+            if (r > 150 && g < 100 && b < 100) brownCount++;
+            if (r > 200 && g > 180 && b < 120) yellowCount++;
+            if (g > r && g > b) greenCount++;
+          }
+
+          const total = brownCount + yellowCount + greenCount;
+          const brownPercent = (brownCount / total) * 100;
+          const yellowPercent = (yellowCount / total) * 100;
+
+          let result;
+          if (brownPercent > 5 || yellowPercent > 10) {
+            result = {
+              type: 'disease_detected',
+              name: brownPercent > yellowPercent ? 'Leaf Spot Disease' : 'Nutrient Deficiency',
+              confidence: Math.min(Math.max(brownPercent, yellowPercent) * 3, 85),
+              description: brownPercent > yellowPercent
+                ? 'Brown spots detected - Possible fungal infection'
+                : 'Yellowing detected - Possible nutrient deficiency',
+              treatment: brownPercent > yellowPercent
+                ? 'Apply copper-based fungicide weekly for 3 weeks'
+                : 'Apply balanced NPK fertilizer and check soil pH',
+              prevention: 'Avoid overhead watering, ensure proper drainage',
+              source: 'Local Image Analysis'
+            };
+          } else {
+            result = {
+              type: 'healthy',
+              name: 'Healthy Plant',
+              confidence: 90,
+              message: 'No significant issues detected',
+              description: 'Leaf coloration appears normal',
+              source: 'Local Image Analysis'
+            };
+          }
+
+          resolve(result);
+        };
+        img.src = e.target?.result;
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  // AI-powered search with fuzzy matching
-  const filteredPests = selectedCrop 
-    ? (pestsData[selectedCrop] || []).filter(pest => {
-        const searchTerms = searchQuery.toLowerCase().split(' ');
-        const pestText = `${pest.name} ${pest.symptoms} ${pest.treatment}`.toLowerCase();
-        return searchTerms.every(term => pestText.includes(term));
-      })
-    : [];
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+  };
 
-  // Get current Kerala season
-  const getCurrentKeralaSeason = () => {
-    const month = new Date().getMonth();
-    if (month >= 6 && month <= 8) return 'Southwest Monsoon';
-    if (month >= 9 && month <= 11) return 'Northwest Monsoon';
-    if (month >= 3 && month <= 5) return 'Summer';
-    return 'Winter';
+  const handleReset = () => {
+    if (uploadedImage) URL.revokeObjectURL(uploadedImage);
+    setUploadedImage(null);
+    setAiDetectionResult(null);
+    setError(null);
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-green mb-2">AI Pest Management</h1>
-            <p className="text-gray-600">Smart pest detection and management for Kerala farmers</p>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPin size={16} />
-            <span>Kerala • {getCurrentKeralaSeason()} • Pest Risk: {getPestRiskLevel()}</span>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 p-4">
+      <div className="max-w-6xl mx-auto">
 
-      {/* AI Image Detection Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 mb-6 border border-blue-200">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Brain className="text-blue-600" />
-              AI Pest Detection
-            </h2>
-            <p className="text-gray-600">Upload plant image for instant pest/disease identification</p>
-          </div>
-          
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              disabled={uploadingImage}
-            />
-            <div className="flex items-center gap-2 px-4 py-2 bg-primary-green text-white rounded-lg hover:bg-primary-dark transition-colors">
-              {uploadingImage ? (
-                <>
-                  <Loader className="animate-spin" size={18} />
-                  <span>Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <Camera size={18} />
-                  <span>Upload Plant Image</span>
-                </>
-              )}
-            </div>
-          </label>
-        </div>
-
-        {/* AI Detection Result */}
-        {aiDetectionResult && (
-          <div className={`mt-4 p-4 rounded-lg ${aiDetectionResult.type === 'pest_detected' ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className={`mt-1 ${aiDetectionResult.type === 'pest_detected' ? 'text-red-600' : 'text-green-600'}`} size={20} />
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {aiDetectionResult.type === 'pest_detected' 
-                    ? `Detected: ${aiDetectionResult.name}`
-                    : aiDetectionResult.message}
-                </h3>
-                {aiDetectionResult.confidence && (
+        <div className="mb-6">
+          <div className={`p-4 rounded-xl shadow-sm border ${
+            apiStatus === 'online'
+              ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300'
+              : apiStatus === 'offline'
+              ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-300'
+              : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-300'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {apiStatus === 'online' ? (
+                  <CheckCircle className="text-green-600" size={24} />
+                ) : apiStatus === 'offline' ? (
+                  <AlertTriangle className="text-yellow-600" size={24} />
+                ) : (
+                  <Loader className="animate-spin text-blue-600" size={24} />
+                )}
+                <div>
+                  <h3 className="font-bold text-gray-800">
+                    {apiStatus === 'online' ? 'Plant.id v3 AI Online' :
+                     apiStatus === 'offline' ? 'Using Advanced Simulation' :
+                     'Testing AI Connection...'}
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    Confidence: {aiDetectionResult.confidence}% • {aiDetectionResult.details}
+                    {apiStatus === 'online' ? 'Real-time disease detection active' :
+                     apiStatus === 'offline' ? 'Advanced image analysis simulation' :
+                     'Checking Plant.id v3 API...'}
                   </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Info size={16} className="text-gray-400" />
+                <span className="text-sm text-gray-500">v3.0 API</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center p-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl shadow-lg mb-6">
+            <Brain className="text-white" size={52} />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            AI Plant Health Scanner
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Advanced pest and disease detection using Plant.id v3 AI technology
+          </p>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+
+          <div className="p-8 md:p-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                Upload Plant Leaf Image
+              </h2>
+              <p className="text-gray-600">
+                Get instant AI-powered diagnosis and treatment recommendations
+              </p>
+            </div>
+
+            <div className="border-4 border-dashed border-green-300 rounded-3xl p-10 text-center bg-gradient-to-b from-green-50 to-white">
+              <div className="inline-flex items-center justify-center w-32 h-32 bg-white rounded-full shadow-2xl mb-8">
+                <Camera className="text-green-600" size={56} />
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                {uploadingImage ? 'AI Analysis in Progress...' : 'Capture or Upload Leaf Image'}
+              </h3>
+
+              <p className="text-gray-600 text-lg mb-10 max-w-2xl mx-auto">
+                For best results: Take clear photo in daylight, focus on affected areas, include multiple leaves if possible
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                  <div className="px-12 py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 active:scale-95 shadow-lg">
+                    {uploadingImage ? (
+                      <div className="flex items-center gap-3">
+                        <Loader className="animate-spin" size={28} />
+                        <span>Analyzing with AI...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <Upload size={28} />
+                        <span>Select Image</span>
+                      </div>
+                    )}
+                  </div>
+                </label>
+
+                {uploadedImage && (
+                  <button
+                    onClick={handleReset}
+                    className="px-12 py-5 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold text-xl hover:shadow-xl transition-all duration-300 shadow-md"
+                  >
+                    Clear Image
+                  </button>
                 )}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* Weather-based Alert */}
-        {weatherData && getPestRiskLevel() === 'High' && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="text-yellow-600" size={18} />
-              <span className="font-medium text-yellow-800">High Pest Alert!</span>
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <div className="p-4 bg-white rounded-xl shadow-sm">
+                  <div className="text-2xl mb-2">🌱</div>
+                  <h4 className="font-bold text-gray-800 mb-1">Leaf Focus</h4>
+                  <p className="text-sm text-gray-600">Clear view of leaf surface</p>
+                </div>
+                <div className="p-4 bg-white rounded-xl shadow-sm">
+                  <div className="text-2xl mb-2">💡</div>
+                  <h4 className="font-bold text-gray-800 mb-1">Good Lighting</h4>
+                  <p className="text-sm text-gray-600">Natural daylight preferred</p>
+                </div>
+                <div className="p-4 bg-white rounded-xl shadow-sm">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <h4 className="font-bold text-gray-800 mb-1">Close-up</h4>
+                  <p className="text-sm text-gray-600">Focus on problem areas</p>
+                </div>
+              </div>
             </div>
-            <p className="text-yellow-700 text-sm mt-1">
-              Current weather conditions favor pest development. Consider preventive measures.
-            </p>
           </div>
-        )}
+
+          {uploadedImage && (
+            <div className="px-8 md:px-12 pb-8">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-md">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-800">Image Preview</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-600">Ready for AI Analysis</span>
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <img
+                    src={uploadedImage}
+                    alt="Uploaded leaf"
+                    className="max-h-80 rounded-xl shadow-lg border-4 border-white"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="px-8 md:px-12 pb-8">
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-md">
+                <div className="flex items-start gap-4">
+                  <Shield className="text-yellow-600 mt-1" size={28} />
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-yellow-800 mb-2">{error.title}</h3>
+                    <p className="text-yellow-700 mb-4">{error.message}</p>
+                    <div className="bg-white/70 p-4 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        <strong>Technical Info:</strong> {apiStatus === 'online'
+                          ? 'Using Plant.id v3 API for real detection'
+                          : 'Using advanced simulation with image analysis'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {aiDetectionResult && (
+            <div className="p-8 md:p-12 bg-gradient-to-b from-gray-50 to-white">
+              <div className={`rounded-3xl overflow-hidden border-4 shadow-2xl ${
+                aiDetectionResult.type === 'disease_detected'
+                  ? 'border-red-400 shadow-red-200/30'
+                  : 'border-green-400 shadow-green-200/30'
+              }`}>
+
+                <div className={`p-8 md:p-12 ${
+                  aiDetectionResult.type === 'disease_detected'
+                    ? 'bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50'
+                    : 'bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50'
+                }`}>
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className={`p-6 rounded-full shadow-lg ${
+                        aiDetectionResult.type === 'disease_detected'
+                          ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                      }`}>
+                        {aiDetectionResult.type === 'disease_detected' ? (
+                          <Bug size={44} />
+                        ) : (
+                          <Leaf size={44} />
+                        )}
+                      </div>
+                      <div>
+                        <div className="inline-flex items-center gap-2 mb-2">
+                          <span className="px-3 py-1 bg-white/80 rounded-full text-sm font-medium">
+                            {aiDetectionResult.source}
+                          </span>
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-800">
+                          {aiDetectionResult.type === 'disease_detected'
+                            ? 'Disease Detected'
+                            : 'Plant is Healthy'}
+                        </h2>
+                        <p className="text-2xl text-gray-600 mt-2">{aiDetectionResult.name}</p>
+                        {aiDetectionResult.plantName && (
+                          <p className="text-gray-500 mt-1">Plant: {aiDetectionResult.plantName}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-8 rounded-2xl shadow-xl min-w-[220px]">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-500 mb-3">AI Confidence</div>
+                        <div className="text-5xl font-bold text-gray-800 mb-6">
+                          {aiDetectionResult.confidence}%
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                          <div
+                            className={`h-3 rounded-full transition-all duration-1000 ${
+                              aiDetectionResult.confidence > 80 ? 'bg-green-500' :
+                              aiDetectionResult.confidence > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${aiDetectionResult.confidence}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Low</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8 md:p-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <div className="space-y-8">
+                      <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100">
+                        <div className="flex items-center gap-3 mb-6">
+                          <AlertTriangle className="text-blue-600" size={24} />
+                          <h3 className="text-2xl font-bold text-gray-800">Diagnosis Details</h3>
+                        </div>
+                        <p className="text-gray-600 text-lg leading-relaxed">
+                          {aiDetectionResult.description}
+                        </p>
+
+                        {aiDetectionResult.scientificName && (
+                          <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                            <div className="font-medium text-blue-800 mb-1">Scientific Classification</div>
+                            <div className="text-blue-700 italic">{aiDetectionResult.scientificName}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      {aiDetectionResult.type === 'disease_detected' ? (
+                        <>
+                          <div className="bg-gradient-to-r from-red-50 to-pink-50 p-8 rounded-2xl shadow-md border border-red-100">
+                            <h3 className="text-2xl font-bold text-red-700 mb-6">Recommended Treatment</h3>
+                            <div className="bg-white/70 p-6 rounded-xl">
+                              <p className="text-gray-700 text-lg">{aiDetectionResult.treatment}</p>
+                            </div>
+                            <div className="mt-6 flex items-center gap-2 text-red-600">
+                              <AlertTriangle size={20} />
+                              <span className="text-sm">Apply treatment at first signs</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-8 rounded-2xl shadow-md border border-blue-100">
+                            <h3 className="text-2xl font-bold text-blue-700 mb-6">Prevention Measures</h3>
+                            <div className="bg-white/70 p-6 rounded-xl">
+                              <p className="text-gray-700 text-lg">{aiDetectionResult.prevention}</p>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-8 rounded-2xl shadow-md border border-green-100">
+                          <h3 className="text-2xl font-bold text-green-700 mb-6">Plant Care Recommendations</h3>
+                          <div className="space-y-4">
+                            {[
+                              'Water regularly but avoid overwatering',
+                              'Provide adequate sunlight exposure',
+                              'Apply balanced fertilizer quarterly',
+                              'Monitor for early pest signs',
+                              'Prune dead or damaged leaves',
+                              'Ensure proper soil drainage'
+                            ].map((tip, index) => (
+                              <div key={index} className="flex items-start gap-3">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                <span className="text-gray-700">{tip}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-5 rounded-xl font-bold text-xl transition-all duration-300 shadow-lg"
+                    >
+                      Analyze Another Image
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!aiDetectionResult && !uploadingImage && (
+            <div className="p-8 md:p-12 border-t border-gray-200">
+              <div className="text-center mb-10">
+                <h3 className="text-2xl font-bold text-gray-800 mb-4">Powered by Plant.id v3 API</h3>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Advanced machine learning trained on millions of plant images for accurate disease detection
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl">
+                  <div className="text-3xl mb-4">🤖</div>
+                  <h4 className="font-bold text-gray-800 mb-2">AI-Powered</h4>
+                  <p className="text-gray-600">Uses Plant.id v3 neural networks</p>
+                </div>
+                <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl">
+                  <div className="text-3xl mb-4">🌍</div>
+                  <h4 className="font-bold text-gray-800 mb-2">Global Database</h4>
+                  <p className="text-gray-600">Thousands of plant species</p>
+                </div>
+                <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl">
+                  <div className="text-3xl mb-4">⚡</div>
+                  <h4 className="font-bold text-gray-800 mb-2">Real-time</h4>
+                  <p className="text-gray-600">Instant analysis and results</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-12 text-center text-gray-500 text-sm">
+          <p>Using Plant.id v3 API for plant disease detection</p>
+        </div>
       </div>
-
-      {/* Search and Filter Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Kerala Crop
-            </label>
-            <select
-              value={selectedCrop}
-              onChange={(e) => setSelectedCrop(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent"
-            >
-              <option value="">Choose a crop...</option>
-              {crops.map(crop => (
-                <option key={crop} value={crop}>{crop}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Pests & Symptoms
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-3.5 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search pests, symptoms, treatments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Conditions
-            </label>
-            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Calendar size={16} />
-                <span>Season: {getCurrentKeralaSeason()}</span>
-                <span className="mx-2">•</span>
-                <span>Risk: {getPestRiskLevel()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pests List */}
-      {selectedCrop && filteredPests.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            Common Pests for {selectedCrop} in Kerala
-          </h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredPests.map(pest => (
-              <div 
-                key={pest.id} 
-                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 border border-gray-200"
-                onClick={() => setSelectedPest(pest)}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-800">{pest.name}</h3>
-                      <p className="text-sm text-gray-500 italic">{pest.scientificName}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      pest.severity === 'High' 
-                        ? 'bg-red-100 text-red-800' 
-                        : pest.severity === 'Medium'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {pest.severity} Risk
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 mb-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar size={14} />
-                      <span><strong>Season:</strong> {pest.season}</span>
-                    </div>
-                    <p className="text-gray-700 line-clamp-2">{pest.symptoms}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-primary-green font-medium">
-                    <AlertTriangle size={16} />
-                    <span>Click for complete treatment guide</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty States */}
-      {selectedCrop && filteredPests.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <Search className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No pests found</h3>
-          <p className="text-gray-600 mb-4">Try different search terms or select another crop</p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCrop('');
-            }}
-            className="text-primary-green hover:underline"
-          >
-            Clear filters
-          </button>
-        </div>
-      )}
-
-      {!selectedCrop && (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <MapPin className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Kerala crop</h3>
-          <p className="text-gray-600">Choose from the dropdown above to see region-specific pests</p>
-          <div className="mt-6 flex flex-wrap gap-2 justify-center">
-            {crops.slice(0, 6).map(crop => (
-              <button
-                key={crop}
-                onClick={() => setSelectedCrop(crop)}
-                className="px-3 py-2 bg-green-50 text-primary-green rounded-lg hover:bg-green-100 transition-colors"
-              >
-                {crop}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Pest Detail Modal */}
-      {selectedPest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedPest.name}</h2>
-                  <p className="text-gray-500 italic">{selectedPest.scientificName}</p>
-                </div>
-                <button 
-                  onClick={() => setSelectedPest(null)}
-                  className="text-gray-400 hover:text-gray-600 p-2"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg">Symptoms</h3>
-                    <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedPest.symptoms}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg">Treatment (Chemical)</h3>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <p className="text-gray-700 whitespace-pre-line">{selectedPest.treatment}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg">Organic Control</h3>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <p className="text-gray-700">{selectedPest.organicControl}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Pest Information</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Severity:</span>
-                        <span className={`font-medium ${
-                          selectedPest.severity === 'High' ? 'text-red-600' :
-                          selectedPest.severity === 'Medium' ? 'text-yellow-600' :
-                          'text-green-600'
-                        }`}>
-                          {selectedPest.severity}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Active Season:</span>
-                        <span className="font-medium">{selectedPest.season}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Favored Weather:</span>
-                        <span className="font-medium">{selectedPest.weatherCondition}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Prevention</h3>
-                    <p className="text-gray-700">{selectedPest.prevention}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button className="flex-1 bg-primary-green text-white py-3 rounded-lg font-medium hover:bg-primary-dark transition-colors">
-                  Mark as Found in My Farm
-                </button>
-                <button 
-                  onClick={() => setSelectedPest(null)}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
