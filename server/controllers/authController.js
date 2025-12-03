@@ -45,7 +45,8 @@ export const registerUser = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Auth register error:', err);
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 };
 
@@ -83,6 +84,7 @@ export const loginUser = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Auth login error:', err);
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 };
