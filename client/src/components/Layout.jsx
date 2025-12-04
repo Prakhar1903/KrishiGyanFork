@@ -98,18 +98,6 @@ const Layout = ({ children }) => {
               <span className="font-medium">
                 {language === 'ml'
                   ? t('languageMalayalam')
-                  : language === 'ta'
-                  ? t('languageTamil')
-                  : language === 'kn'
-                  ? t('languageKannada')
-                  : language === 'tl'
-                  ? t('languageTulu')
-                  : language === 'kok'
-                  ? t('languageKonkani')
-                  : language === 'hi'
-                  ? t('languageHindi')
-                  : language === 'ur'
-                  ? t('languageUrdu')
                   : t('languageEnglish')}
               </span>
               <span className="text-xs">▾</span>
@@ -141,78 +129,7 @@ const Layout = ({ children }) => {
                 >
                   {t('languageMalayalam')} – Malayalam
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('ta');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'ta' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageTamil')} – Tamil
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('kn');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'kn' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageKannada')} – Kannada
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('tl');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'tl' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageTulu')} – Tulu
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('kok');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'kok' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageKonkani')} – Konkani
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('hi');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'hi' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageHindi')} – Hindi
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLanguage('ur');
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                    language === 'ur' ? 'font-semibold text-primary-green' : 'text-gray-800'
-                  }`}
-                >
-                  {t('languageUrdu')} – Urdu
-                </button>
+                
               </div>
             )}
           </div>
