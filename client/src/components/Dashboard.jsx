@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { farmAPI, weatherAPI } from '../services/api';
-import { Sprout, CloudRain, TrendingUp, AlertCircle, Plus, Shield } from 'lucide-react';
+import { 
+  Sprout, CloudRain, TrendingUp, AlertCircle, Plus, Shield,
+  Award // ADD THIS IMPORT
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Chatbot from './Chatbot';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
@@ -113,7 +116,7 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* Quick Access Cards */}
+      {/* Quick Access Cards - UPDATE THIS SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div 
           className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500 cursor-pointer hover:shadow-lg transition-shadow"
@@ -137,6 +140,33 @@ const Dashboard = () => {
             <div>
                 <h3 className="font-semibold text-gray-900">{t('marketPricesCardTitle')}</h3>
                 <p className="text-sm text-gray-600">{t('marketPricesCardSubtitle')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ADD THIS NEW CARD */}
+        <div 
+          className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/schemes')}
+        >
+          <div className="flex items-center gap-3">
+            <Award className="text-purple-500" size={24} />
+            <div>
+                <h3 className="font-semibold text-gray-900">Government Schemes</h3>
+                <p className="text-sm text-gray-600">Apply for subsidies & benefits</p>
+            </div>
+          </div>
+        </div>
+
+        <div 
+          className="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/crops')}
+        >
+          <div className="flex items-center gap-3">
+            <Sprout className="text-orange-500" size={24} />
+            <div>
+                <h3 className="font-semibold text-gray-900">{t('cropAdvice')}</h3>
+                <p className="text-sm text-gray-600">{t('getPersonalizedAdvice')}</p>
             </div>
           </div>
         </div>

@@ -7,10 +7,10 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Farms from './components/Farms';
 import CropRecommendations from './components/CropRecommendations';
+import GovernmentSchemes from './components/GovernmentSchemes'; // ADD THIS IMPORT
 import Layout from './components/Layout';
 import PestManagement from './components/PestManagement';
 import MarketPrices from './components/MarketPrices';
-// Remove AnalyticsDashboard import since we're not using it yet
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -64,8 +64,14 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Remove the AnalyticsDashboard route for now */}
-            {/* We'll add it back when we create the component properly */}
+            {/* ADD THIS NEW ROUTE */}
+            <Route path="/schemes" element={
+              <ProtectedRoute>
+                <Layout>
+                  <GovernmentSchemes />
+                </Layout>
+              </ProtectedRoute>
+            } />
             
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" />} />

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Home, Sprout, CloudRain, Shield, TrendingUp } from 'lucide-react';
+import { LogOut, Home, Sprout, CloudRain, Shield, TrendingUp, Award } from 'lucide-react'; // ADD Award
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 const Layout = ({ children }) => {
@@ -16,8 +16,9 @@ const Layout = ({ children }) => {
     { path: '/', icon: Home, labelKey: 'dashboard' },
     { path: '/farms', icon: Sprout, labelKey: 'myFarms' },
     { path: '/crops', icon: CloudRain, labelKey: 'cropAdvice' },
-    { path: '/pest', icon: Shield, labelKey: 'pestControl' }, // Fixed path to match App.jsx
+    { path: '/pest', icon: Shield, labelKey: 'pestControl' },
     { path: '/market', icon: TrendingUp, labelKey: 'marketPrices' },
+    { path: '/schemes', icon: Award, labelKey: 'governmentSchemes' }, // ADD THIS
   ];
 
   return (
