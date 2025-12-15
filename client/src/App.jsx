@@ -11,7 +11,7 @@ import GovernmentSchemes from './components/GovernmentSchemes'; // ADD THIS IMPO
 import Layout from './components/Layout';
 import PestManagement from './components/PestManagement';
 import MarketPrices from './components/MarketPrices';
-
+import Chat from './components/temp';
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" />;
@@ -73,7 +73,13 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            
+            <Route path="/chat" element={
+  <ProtectedRoute>
+    <Layout>
+      <Chat />
+    </Layout>
+  </ProtectedRoute>
+} />
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

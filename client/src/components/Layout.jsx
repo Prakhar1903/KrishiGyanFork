@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Home, Sprout, CloudRain, Shield, TrendingUp, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, Home, Sprout, CloudRain, Shield, TrendingUp, Award, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react'; // ADD MessageCircle
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 
@@ -20,11 +20,11 @@ const Layout = ({ children }) => {
     { path: '/crops', icon: CloudRain, labelKey: 'cropAdvice' },
     { path: '/pest', icon: Shield, labelKey: 'pestControl' },
     { path: '/market', icon: TrendingUp, labelKey: 'marketPrices' },
-    { path: '/schemes', icon: Award, labelKey: 'governmentSchemes' }, // ADD THIS
+    { path: '/schemes', icon: Award, labelKey: 'governmentSchemes' },
+    { path: '/chat', icon: MessageCircle, labelKey: 'chatCommunity' }, // ADD THIS
   ];
 
   return (
-    
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-gradient-to-b from-primary-green to-primary-light text-white flex flex-col shadow-xl fixed left-0 top-0 bottom-0 z-50 transition-all duration-300`}>
@@ -182,7 +182,6 @@ const Layout = ({ children }) => {
                 >
                   {t('languageMalayalam')} – Malayalam
                 </button>
-                
               </div>
             )}
           </div>

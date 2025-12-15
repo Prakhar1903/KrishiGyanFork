@@ -13,7 +13,7 @@ import cropRoutes from "./routes/cropRoutes.js";
 import pestRoutes from "./routes/pestRoutes.js";
 import marketRoutes from "./routes/marketRoutes.js";
 import schemeRoutes from "./routes/schemeRoutes.js";
-
+import chatRoutes from "./routes/chatRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -29,7 +29,7 @@ app.use("/api/crops", cropRoutes);
 app.use("/api/pests", pestRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/schemes", schemeRoutes);
-
+app.use("/api/chat", chatRoutes);
 // Test Route
 app.get("/", (req, res) => {
   res.send("🌾 AI Kerala Farmers Backend Running on LOCAL MongoDB ✅");
