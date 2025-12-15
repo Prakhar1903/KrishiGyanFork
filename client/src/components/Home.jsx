@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   Sprout, CloudRain, TrendingUp, Shield, Award, 
-  ChevronLeft, ChevronRight, ArrowRight, Play
+  ChevronLeft, ChevronRight, ArrowRight, Play,
+  Mail, Phone, MapPin, MessageSquare, HelpCircle,
+  Facebook, Twitter, Instagram, Youtube, Send, CheckCircle
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 import Chatbot from './Chatbot';
@@ -17,6 +19,14 @@ const Home = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+  const [contactSubmitted, setContactSubmitted] = useState(false);
 
   // Slider images
   const slides = [
@@ -347,6 +357,261 @@ const Home = () => {
           <div className="text-center">
             <div className="text-4xl font-bold mb-2">24/7</div>
             <div className="text-green-100">{t('aiSupport') || 'AI Support'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* About Section */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <h2 className="text-3xl font-bold text-primary-green mb-6 text-center">
+          {t('aboutUs') || 'About KrishiGyan'}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xl font-semibold text-primary-green mb-4">
+              {t('ourMission') || 'Our Mission'}
+            </h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              {t('missionText') || 'KrishiGyan is dedicated to empowering farmers with cutting-edge technology and AI-powered solutions. We aim to revolutionize farming practices by providing real-time insights, expert guidance, and comprehensive tools for modern agriculture.'}
+            </p>
+            <h3 className="text-xl font-semibold text-primary-green mb-4">
+              {t('ourVision') || 'Our Vision'}
+            </h3>
+            <p className="text-gray-700 leading-relaxed">
+              {t('visionText') || 'To become the leading digital platform for farmers, helping them make informed decisions, increase productivity, and achieve sustainable farming practices through technology.'}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-primary-green mb-4">
+              {t('whatWeOffer') || 'What We Offer'}
+            </h3>
+            <ul className="space-y-3">
+              {[
+                t('offer1') || 'AI-powered crop recommendations',
+                t('offer2') || 'Real-time market price tracking',
+                t('offer3') || 'Pest and disease identification',
+                t('offer4') || 'Government scheme information',
+                t('offer5') || 'Farm expense and profit tracking',
+                t('offer6') || 'Task scheduling and calendar management',
+                t('offer7') || '24/7 AI chatbot support',
+                t('offer8') || 'Multi-language support'
+              ].map((item, index) => (
+                <li key={index} className="flex items-start gap-2 text-gray-700">
+                  <span className="text-primary-green mt-1">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Contact Form */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold text-primary-green mb-6 flex items-center gap-2">
+            <MessageSquare size={24} />
+            {t('contactUs') || 'Contact Us'}
+          </h2>
+          {contactSubmitted ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="text-green-600" size={32} />
+              </div>
+              <h3 className="text-xl font-semibold text-primary-green mb-2">
+                {t('thankYou') || 'Thank You!'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {t('contactSubmitted') || 'Your message has been submitted successfully. We will get back to you soon.'}
+              </p>
+              <button
+                onClick={() => {
+                  setContactSubmitted(false);
+                  setContactForm({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    subject: '',
+                    message: ''
+                  });
+                }}
+                className="text-primary-green hover:text-primary-light font-semibold"
+              >
+                {t('sendAnother') || 'Send Another Message'}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // Handle form submission here
+              console.log('Contact form submitted:', contactForm);
+              setContactSubmitted(true);
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('fullName') || 'Full Name'} *
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('email') || 'Email'} *
+                </label>
+                <input
+                  type="email"
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('phoneNumber') || 'Phone Number'}
+                </label>
+                <input
+                  type="tel"
+                  value={contactForm.phone}
+                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('subject') || 'Subject'} *
+                </label>
+                <input
+                  type="text"
+                  value={contactForm.subject}
+                  onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('message') || 'Message'} *
+                </label>
+                <textarea
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                  rows="4"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary-green to-primary-light text-white py-3 px-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <Send size={20} />
+                {t('sendMessage') || 'Send Message'}
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-primary-green mb-6">
+              {t('getInTouch') || 'Get In Touch'}
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Mail className="text-primary-green" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{t('email') || 'Email'}</h3>
+                  <p className="text-gray-600">support@krishigyan.com</p>
+                  <p className="text-gray-600">info@krishigyan.com</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Phone className="text-blue-600" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{t('phone') || 'Phone'}</h3>
+                  <p className="text-gray-600">+91 1800-123-4567</p>
+                  <p className="text-gray-600">+91 98765-43210</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <MapPin className="text-orange-600" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{t('address') || 'Address'}</h3>
+                  <p className="text-gray-600">
+                    {t('addressLine1') || 'KrishiGyan Headquarters'}<br />
+                    {t('addressLine2') || 'Kerala Agricultural Technology Park'}<br />
+                    {t('addressLine3') || 'Thiruvananthapuram, Kerala - 695001'}<br />
+                    {t('addressLine4') || 'India'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Media */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-primary-green mb-4">
+              {t('followUs') || 'Follow Us'}
+            </h2>
+            <div className="flex gap-4">
+              {[
+                { icon: Facebook, label: 'Facebook', bgClass: 'bg-blue-100 hover:bg-blue-200', textClass: 'text-blue-600' },
+                { icon: Twitter, label: 'Twitter', bgClass: 'bg-sky-100 hover:bg-sky-200', textClass: 'text-sky-600' },
+                { icon: Instagram, label: 'Instagram', bgClass: 'bg-pink-100 hover:bg-pink-200', textClass: 'text-pink-600' },
+                { icon: Youtube, label: 'YouTube', bgClass: 'bg-red-100 hover:bg-red-200', textClass: 'text-red-600' }
+              ].map((social, index) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={index}
+                    href="#"
+                    className={`p-3 ${social.bgClass} rounded-lg transition-colors`}
+                    title={social.label}
+                  >
+                    <Icon className={social.textClass} size={24} />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Help & Support */}
+          <div className="bg-gradient-to-br from-primary-green to-primary-light rounded-2xl shadow-lg p-6 text-white">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <HelpCircle size={24} />
+              {t('needHelp') || 'Need Help?'}
+            </h2>
+            <p className="text-green-100 mb-4">
+              {t('helpText') || 'Our support team is available 24/7 to assist you with any questions or issues.'}
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-colors text-left"
+              >
+                {t('faq') || 'Frequently Asked Questions'}
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-colors text-left"
+              >
+                {t('userGuide') || 'User Guide & Tutorials'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
