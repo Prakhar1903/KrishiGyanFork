@@ -3,14 +3,42 @@ import Task from "../models/Task.js";
 
 export const addTask = async (req, res) => {
   try {
+    const {
+      title,
+      description,
+      category,
+      date,
+      time,
+      priority,
+      status,
+      farmId,
+    } = req.body;
+
+    if (!title || !category || !date) {
+      return res.status(400).json({
+        message: "Title, category and date are required",
+      });
+    }
+
     const task = await Task.create({
       userId: req.user.userId,
-      ...req.body,
+      farmId: farmId || null,
+      title,
+      description,
+      category,
+      date: new Date(date), // ✅ IMPORTANT FIX
+      time,
+      priority,
+      status,
     });
+
     res.status(201).json({ message: "Task added", task });
   } catch (error) {
     console.error("Error adding task:", error);
-    res.status(500).json({ message: "Error adding task", error: error.message });
+    res.status(500).json({
+      message: "Error adding task",
+      error: error.message,
+    });
   }
 };
 
