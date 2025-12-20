@@ -16,6 +16,8 @@ const Chatbot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const messagesEndRef = useRef(null);
   const { t, language } = useLanguage();
 
@@ -35,13 +37,91 @@ const Chatbot = () => {
     }
   };
 
+  // Text-to-Speech Functionality
+  const speakText = (text) => {
+    if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+    
+    // Stop any ongoing speech
+    stopSpeaking();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Configure voice based on language
+    utterance.lang = language === 'ml' ? 'ml-IN' : 'en-IN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    // Get available voices and select appropriate one
+    const voices = window.speechSynthesis.getVoices();
+    let preferredVoice = null;
+    
+    if (language === 'ml') {
+      // Try to find Malayalam voice
+      preferredVoice = voices.find(voice => 
+        voice.lang === 'ml-IN' || 
+        voice.name.toLowerCase().includes('malayalam')
+      );
+    } else {
+      // Try to find English (India) voice, fallback to any English
+      preferredVoice = voices.find(voice => 
+        voice.lang === 'en-IN' || 
+        voice.lang.startsWith('en-')
+      );
+    }
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    // Event listeners for tracking speech state
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const toggleVoice = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    }
+    setIsVoiceEnabled(!isVoiceEnabled);
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   
+  // Load voices when component mounts
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      // Some browsers need this to populate voices
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
+    
+    // Auto-speak new AI messages if voice is enabled
+    if (messages.length > 0 && isVoiceEnabled) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'ai' && lastMessage.id !== 1) {
+        // Small delay to ensure message is rendered
+        setTimeout(() => {
+          speakText(lastMessage.text);
+        }, 300);
+      }
+    }
   }, [messages]);
 
   const handleSendMessage = async () => {
@@ -151,6 +231,7 @@ const Chatbot = () => {
   };
 
   const clearChat = () => {
+    stopSpeaking();
     setMessages([
       {
         id: 1,
@@ -166,10 +247,14 @@ const Chatbot = () => {
     if (isMinimized) {
       setIsMinimized(false);
     }
+    if (!isOpen) {
+      stopSpeaking();
+    }
   };
 
   const minimizeChat = () => {
     setIsMinimized(true);
+    stopSpeaking();
   };
 
   // Floating Button (Always visible when chat is closed/minimized)
@@ -213,6 +298,21 @@ const Chatbot = () => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {/* Voice Toggle Button */}
+            <button
+              onClick={toggleVoice}
+              className={`w-8 h-8 rounded-lg transition-colors flex items-center justify-center ${
+                isVoiceEnabled 
+                  ? 'bg-white bg-opacity-30 hover:bg-opacity-40' 
+                  : 'hover:bg-white hover:bg-opacity-20'
+              }`}
+              title={isVoiceEnabled ? "Turn off voice" : "Turn on voice"}
+            >
+              {isVoiceEnabled ? '🔊' : '🔇'}
+              {isSpeaking && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              )}
+            </button>
             <button
               onClick={minimizeChat}
               className="w-8 h-8 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors flex items-center justify-center"
@@ -263,6 +363,37 @@ const Chatbot = () => {
               }`}
             >
               <div className="whitespace-pre-wrap text-sm">{message.text}</div>
+              
+              {/* Audio Controls for AI Messages */}
+              {message.sender === 'ai' && (
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    onClick={() => speakText(message.text)}
+                    disabled={!isVoiceEnabled || isSpeaking}
+                    className={`flex items-center text-xs transition-colors ${
+                      isVoiceEnabled && !isSpeaking
+                        ? 'text-green-600 hover:text-green-800'
+                        : 'text-gray-400 cursor-not-allowed'
+                    }`}
+                    title={isVoiceEnabled ? "Listen to response" : "Voice disabled"}
+                  >
+                    <span className="mr-1">🔊</span> Listen
+                  </button>
+                  <button
+                    onClick={stopSpeaking}
+                    disabled={!isSpeaking}
+                    className={`text-xs transition-colors ${
+                      isSpeaking
+                        ? 'text-red-600 hover:text-red-800'
+                        : 'text-gray-300 cursor-not-allowed'
+                    }`}
+                    title="Stop audio"
+                  >
+                    Stop
+                  </button>
+                </div>
+              )}
+              
               <div
                 className={`text-xs mt-1 ${
                   message.sender === 'user' ? 'text-green-100' : 'text-gray-500'
@@ -332,6 +463,11 @@ const Chatbot = () => {
         </div>
         <div className="text-xs text-gray-500 mt-2 text-center">
           {t('chatbotPressEnter')}
+          {!('speechSynthesis' in window) && (
+            <div className="text-amber-600 mt-1">
+              ⚠️ Voice feature not supported in your browser
+            </div>
+          )}
         </div>
       </div>
     </div>

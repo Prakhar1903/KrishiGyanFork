@@ -192,7 +192,16 @@ const Login = () => {
                 {t("signUpHere")}
               </Link>
             </p>
+            <p className="text-gray-600 mt-4">
+    <Link
+      to="/forgot-password"
+      className="text-primary-green font-semibold hover:underline"
+    >
+      Forgot your password?
+    </Link>
+  </p>
           </div>
+          
         </div>
       </div>
     </div>

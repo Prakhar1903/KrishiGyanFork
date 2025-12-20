@@ -31,7 +31,7 @@ const Layout = ({ children }) => {
     { path: '/expenses', icon: Calculator, labelKey: 'farmExpenses' },
     { path: '/calendar', icon: Calendar, labelKey: 'farmCalendar' },
     { path: '/chat', icon: MessageCircle, labelKey: 'chatCommunity' },
-    { path: '/voice-assistant', icon: Mic, labelKey: 'voiceAssistant' },
+   
   ];
 
   return (
