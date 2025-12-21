@@ -211,10 +211,10 @@ const Dashboard = () => {
             <button
               onClick={toggleAudio}
               className={`p-3 rounded-full transition-all duration-200 ${isAudioPlaying
-                  ? 'bg-primary-green text-white shadow-lg'
-                  : audioError
-                    ? 'bg-red-100 text-red-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary-green text-white shadow-lg'
+                : audioError
+                  ? 'bg-red-100 text-red-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               title={isAudioPlaying ? "Pause background audio" : audioError || "Play background audio"}
               aria-label={isAudioPlaying ? "Pause audio" : "Play audio"}

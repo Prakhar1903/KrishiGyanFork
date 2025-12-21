@@ -10,7 +10,6 @@ import {
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import UserProfileModal from './UserProfileModal.jsx';
-import agriLogo from '../assets/agri_logo.jpg';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -46,7 +45,7 @@ const Layout = ({ children }) => {
               <div className="flex flex-col items-center gap-2 text-center w-full">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
                   <img
-                    src={agriLogo}
+                    src="/src/assets/agri_logo.jpg"
                     alt="KRISHIGNAN Logo"
                     className="w-full h-full object-cover"
                   />
@@ -60,7 +59,7 @@ const Layout = ({ children }) => {
               <div className="flex justify-center w-full">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
                   <img
-                    src={agriLogo}
+                    src="/src/assets/agri_logo.jpg"
                     alt="KRISHIGNAN Logo"
                     className="w-full h-full object-cover"
                   />

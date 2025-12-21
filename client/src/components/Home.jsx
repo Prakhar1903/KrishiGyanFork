@@ -185,8 +185,8 @@ const Home = () => {
               key={index}
               onClick={() => goToSlide(index)}
               className={`h-3 rounded-full transition-all duration-300 ${index === currentSlide
-                  ? 'w-8 bg-primary-green'
-                  : 'w-3 bg-white/50 hover:bg-white/70'
+                ? 'w-8 bg-primary-green'
+                : 'w-3 bg-white/50 hover:bg-white/70'
                 }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -303,8 +303,8 @@ const Home = () => {
                 <div
                   key={index}
                   className={`p-3 rounded-lg border-l-4 ${announcement.type === 'important' ? 'border-red-500 bg-red-50' :
-                      announcement.type === 'warning' ? 'border-yellow-500 bg-yellow-50' :
-                        'border-blue-500 bg-blue-50'
+                    announcement.type === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                      'border-blue-500 bg-blue-50'
                     }`}
                 >
                   <p className="text-sm text-gray-800">{announcement.text}</p>
@@ -444,7 +444,8 @@ const Home = () => {
               e.preventDefault();
               try {
                 // Handle form submission here
-                await axios.post('http://localhost:8080/api/contact/submit', contactForm);
+                const API_URL = import.meta.env.VITE_API_URL || '/api';
+                await axios.post(`${API_URL}/contact/submit`, contactForm);
                 console.log('Contact form submitted:', contactForm);
                 setContactSubmitted(true);
               } catch (error) {

@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import agriLogo from "../assets/agri_logo.jpg";
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -38,7 +37,8 @@ const ForgotPassword = () => {
         setSuccess("");
 
         try {
-            const response = await fetch("/api/password-reset/request", {
+            const API_URL = import.meta.env.VITE_API_URL || '/api';
+            const response = await fetch(`${API_URL}/password-reset/request`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: formData.email })
@@ -72,7 +72,8 @@ const ForgotPassword = () => {
         setSuccess("");
 
         try {
-            const response = await fetch("/api/password-reset/verify", {
+            const API_URL = import.meta.env.VITE_API_URL || '/api';
+            const response = await fetch(`${API_URL}/password-reset/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -117,7 +118,8 @@ const ForgotPassword = () => {
         setSuccess("");
 
         try {
-            const response = await fetch("/api/password-reset/reset", {
+            const API_URL = import.meta.env.VITE_API_URL || '/api';
+            const response = await fetch(`${API_URL}/password-reset/reset`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -160,7 +162,7 @@ const ForgotPassword = () => {
                     <div className="text-center mb-8">
                         <div className="auth-logo-image mb-4">
                             <img
-                                src={agriLogo}
+                                src="/src/assets/agri_logo.jpg"
                                 alt="KRISHIGNAN Logo"
                                 className="w-full h-full object-cover"
                             />

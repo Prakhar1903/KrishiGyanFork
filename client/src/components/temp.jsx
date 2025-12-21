@@ -477,8 +477,8 @@ const Chat = () => {
                       onClick={sendMessage}
                       disabled={!newMessage.trim()}
                       className={`p-3 rounded-full flex-shrink-0 ${newMessage.trim()
-                          ? 'bg-primary-green text-white hover:bg-green-700'
-                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        ? 'bg-primary-green text-white hover:bg-green-700'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         }`}
                     >
                       <Send size={20} />
