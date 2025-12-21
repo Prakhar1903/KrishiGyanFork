@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import agriLogo from "../assets/agri_logo.jpg";
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -35,7 +36,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError("");
         setSuccess("");
-        
+
         try {
             const response = await fetch("http://localhost:8080/api/password-reset/request", {
                 method: "POST",
@@ -44,7 +45,7 @@ const ForgotPassword = () => {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 setStep(2);
                 setSuccess("OTP sent to your email!");
@@ -69,7 +70,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError("");
         setSuccess("");
-        
+
         try {
             const response = await fetch("http://localhost:8080/api/password-reset/verify", {
                 method: "POST",
@@ -81,7 +82,7 @@ const ForgotPassword = () => {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 setStep(3);
                 setSuccess("OTP verified! Now set your new password");
@@ -114,7 +115,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError("");
         setSuccess("");
-        
+
         try {
             const response = await fetch("http://localhost:8080/api/password-reset/reset", {
                 method: "POST",
@@ -127,7 +128,7 @@ const ForgotPassword = () => {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 setSuccess("Password reset successful! Redirecting to login...");
                 setTimeout(() => navigate("/login"), 2000);
@@ -159,7 +160,7 @@ const ForgotPassword = () => {
                     <div className="text-center mb-8">
                         <div className="auth-logo-image mb-4">
                             <img
-                                src="/src/assets/agri_logo.jpg"
+                                src={agriLogo}
                                 alt="KRISHIGNAN Logo"
                                 className="w-full h-full object-cover"
                             />
@@ -189,7 +190,7 @@ const ForgotPassword = () => {
                             <p className="text-gray-600 text-center">
                                 Enter your email to receive a password reset OTP
                             </p>
-                            
+
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Mail className="h-5 w-5 text-gray-400" />
@@ -220,7 +221,7 @@ const ForgotPassword = () => {
                             <p className="text-gray-600 text-center">
                                 Enter the 6-digit OTP sent to <span className="font-semibold">{formData.email}</span>
                             </p>
-                            
+
                             <div className="mb-2">
                                 <input
                                     type="text"
@@ -267,7 +268,7 @@ const ForgotPassword = () => {
                             <p className="text-gray-600 text-center">
                                 Set your new password
                             </p>
-                            
+
                             <div className="space-y-4">
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -293,7 +294,7 @@ const ForgotPassword = () => {
                                         )}
                                     </button>
                                 </div>
-                                
+
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Lock className="h-5 w-5 text-gray-400" />

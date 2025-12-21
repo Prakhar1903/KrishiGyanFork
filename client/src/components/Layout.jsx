@@ -2,14 +2,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LogOut, Home, Sprout, CloudRain, Shield, TrendingUp, Award, 
-  Calculator, Calendar, ChevronLeft, ChevronRight, MessageCircle, 
+import {
+  LogOut, Home, Sprout, CloudRain, Shield, TrendingUp, Award,
+  Calculator, Calendar, ChevronLeft, ChevronRight, MessageCircle,
   Settings, User as UserIcon, Mic
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import UserProfileModal from './UserProfileModal.jsx';
+import agriLogo from '../assets/agri_logo.jpg';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -31,7 +32,7 @@ const Layout = ({ children }) => {
     { path: '/expenses', icon: Calculator, labelKey: 'farmExpenses' },
     { path: '/calendar', icon: Calendar, labelKey: 'farmCalendar' },
     { path: '/chat', icon: MessageCircle, labelKey: 'chatCommunity' },
-   
+
   ];
 
   return (
@@ -45,7 +46,7 @@ const Layout = ({ children }) => {
               <div className="flex flex-col items-center gap-2 text-center w-full">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
                   <img
-                    src="/src/assets/agri_logo.jpg"
+                    src={agriLogo}
                     alt="KRISHIGNAN Logo"
                     className="w-full h-full object-cover"
                   />
@@ -59,7 +60,7 @@ const Layout = ({ children }) => {
               <div className="flex justify-center w-full">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
                   <img
-                    src="/src/assets/agri_logo.jpg"
+                    src={agriLogo}
                     alt="KRISHIGNAN Logo"
                     className="w-full h-full object-cover"
                   />
@@ -86,8 +87,8 @@ const Layout = ({ children }) => {
               <button
                 key={item.path}
                 className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-4 py-3 rounded-lg transition-all duration-200 group relative ${isActive
-                    ? 'bg-white/20 text-white border-l-4 border-accent-gold'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  ? 'bg-white/20 text-white border-l-4 border-accent-gold'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
                 onClick={() => navigate(item.path)}
                 title={isSidebarCollapsed ? t(item.labelKey) : ''}
@@ -111,7 +112,7 @@ const Layout = ({ children }) => {
         <div className="p-4 bg-black/10">
           {!isSidebarCollapsed ? (
             <>
-              <div 
+              <div
                 className="flex items-center gap-3 mb-4 justify-center text-center cursor-pointer hover:bg-white/10 p-2 rounded-lg transition-colors"
                 onClick={() => setShowProfileModal(true)}
                 title="Click to manage account"
@@ -137,7 +138,7 @@ const Layout = ({ children }) => {
             </>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <div 
+              <div
                 className="w-10 h-10 bg-accent-gold text-primary-green rounded-full flex items-center justify-center font-bold text-lg cursor-pointer hover:bg-accent-gold/80 transition-colors relative group"
                 onClick={() => setShowProfileModal(true)}
                 title="Account Settings"
@@ -209,9 +210,9 @@ const Layout = ({ children }) => {
         </div>
 
         {children}
-        
+
         {/* User Profile Modal */}
-        <UserProfileModal 
+        <UserProfileModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
         />

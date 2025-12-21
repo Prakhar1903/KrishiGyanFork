@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, MapPin, Phone, Eye, EyeOff } from 'lucide-react';
 import image from '../assets/image2.png';
+import agriLogo from '../assets/agri_logo.jpg';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -77,7 +78,7 @@ const Register = () => {
           <div className="text-center mb-8">
             <div className="auth-logo-image mb-4">
               <img
-                src="/src/assets/agri_logo.jpg"
+                src={agriLogo}
                 alt="KRISHIGNAN Logo"
                 className="w-full h-full object-cover"
               />

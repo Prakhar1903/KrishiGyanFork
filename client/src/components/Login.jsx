@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Lock, Eye, EyeOff, Volume2, VolumeX } from "lucide-react"; // ADD Volume icons
 import bgVideo from "../assets/video.mp4";
+import agriLogo from "../assets/agri_logo.jpg";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 
 const Login = () => {
@@ -23,10 +24,10 @@ const Login = () => {
 
   useEffect(() => {
     if (!videoRef.current) return;
-    
+
     // Start video muted for autoplay compatibility
     videoRef.current.muted = true;
-    
+
     const playPromise = videoRef.current.play();
     if (playPromise !== undefined) {
       playPromise.catch(error => {
@@ -109,7 +110,7 @@ const Login = () => {
           <div className="text-center mb-8">
             <div className="auth-logo-image mb-4">
               <img
-                src="/src/assets/agri_logo.jpg"
+                src={agriLogo}
                 alt="KRISHIGNAN Logo"
                 className="w-full h-full object-cover"
               />
@@ -193,15 +194,15 @@ const Login = () => {
               </Link>
             </p>
             <p className="text-gray-600 mt-4">
-    <Link
-      to="/forgot-password"
-      className="text-primary-green font-semibold hover:underline"
-    >
-      Forgot your password?
-    </Link>
-  </p>
+              <Link
+                to="/forgot-password"
+                className="text-primary-green font-semibold hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </p>
           </div>
-          
+
         </div>
       </div>
     </div>
