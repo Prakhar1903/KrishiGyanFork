@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 import { taskAPI } from '../services/api';
-import { 
-  Calendar, Plus, Edit2, Trash2, CheckCircle, Circle, 
+import {
+  Calendar, Plus, Edit2, Trash2, CheckCircle, Circle,
   Clock, AlertCircle, ChevronLeft, ChevronRight, Filter
 } from 'lucide-react';
 
@@ -23,7 +23,7 @@ const FarmCalendar = () => {
     title: '',
     description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0'),
     time: '',
     priority: 'medium',
     status: 'pending',
@@ -103,7 +103,7 @@ const FarmCalendar = () => {
   };
 
   const monthNames = [
-    t('monthJanuary') || 'January', t('monthFebruary') || 'February', 
+    t('monthJanuary') || 'January', t('monthFebruary') || 'February',
     t('monthMarch') || 'March', t('monthApril') || 'April',
     t('monthMay') || 'May', t('monthJune') || 'June',
     t('monthJuly') || 'July', t('monthAugust') || 'August',
@@ -112,11 +112,20 @@ const FarmCalendar = () => {
   ];
 
   const dayNames = [
-    t('daySunday') || 'Sun', t('dayMonday') || 'Mon', 
+    t('daySunday') || 'Sun', t('dayMonday') || 'Mon',
     t('dayTuesday') || 'Tue', t('dayWednesday') || 'Wed',
-    t('dayThursday') || 'Thu', t('dayFriday') || 'Fri', 
+    t('dayThursday') || 'Thu', t('dayFriday') || 'Fri',
     t('daySaturday') || 'Sat'
   ];
+
+  // Helper: Format a date object to "YYYY-MM-DD" using local time
+  const formatDateToLocalYYYYMMDD = (date) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -129,7 +138,7 @@ const FarmCalendar = () => {
   const handleDateClick = (date) => {
     if (date) {
       setSelectedDate(date);
-      setTaskForm({ ...taskForm, date: date.toISOString().split('T')[0] });
+      setTaskForm({ ...taskForm, date: formatDateToLocalYYYYMMDD(date) });
       setShowTaskModal(true);
     }
   };
@@ -163,7 +172,7 @@ const FarmCalendar = () => {
       title: '',
       description: '',
       category: '',
-      date: new Date().toISOString().split('T')[0],
+      date: formatDateToLocalYYYYMMDD(new Date()),
       time: '',
       priority: 'medium',
       status: 'pending',
@@ -179,7 +188,7 @@ const FarmCalendar = () => {
       title: task.title,
       description: task.description || '',
       category: task.category,
-      date: task.date?.slice(0,10) || task.date,
+      date: task.date?.slice(0, 10) || task.date,
       time: task.time || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
@@ -224,8 +233,16 @@ const FarmCalendar = () => {
 
   const getTasksForDate = (date) => {
     if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    let filteredTasks = tasks.filter(task => task.date === dateStr);
+    // Convert the selected calendar date to local YYYY-MM-DD
+    const dateStr = formatDateToLocalYYYYMMDD(date);
+
+    // Filter tasks where the task's date (sliced to 10 chars) matches our local date string
+    let filteredTasks = tasks.filter(task => {
+      if (!task.date) return false;
+      // Backend returns ISO "2025-12-16T00:00:00.000Z", we want first 10 chars "2025-12-16"
+      const taskDateStr = task.date.substring(0, 10);
+      return taskDateStr === dateStr;
+    });
 
     if (filterCategory !== 'all') {
       filteredTasks = filteredTasks.filter(task => task.category === filterCategory);
@@ -358,17 +375,15 @@ const FarmCalendar = () => {
                   <div
                     key={index}
                     onClick={() => handleDateClick(date)}
-                    className={`aspect-square border-2 rounded-lg p-1 cursor-pointer transition-all hover:shadow-md ${
-                      isSelected
-                        ? 'border-primary-green bg-green-50'
-                        : isToday
+                    className={`aspect-square border-2 rounded-lg p-1 cursor-pointer transition-all hover:shadow-md ${isSelected
+                      ? 'border-primary-green bg-green-50'
+                      : isToday
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
-                    <div className={`text-sm font-semibold mb-1 ${
-                      isToday ? 'text-blue-600' : 'text-gray-700'
-                    }`}>
+                    <div className={`text-sm font-semibold mb-1 ${isToday ? 'text-blue-600' : 'text-gray-700'
+                      }`}>
                       {date.getDate()}
                     </div>
                     {hasTasks && (
@@ -458,7 +473,7 @@ const FarmCalendar = () => {
                   const status = statuses.find(s => s.value === task.status);
                   const StatusIcon = status?.icon || Circle;
                   const taskId = task._id || task.id;
-                  
+
                   return (
                     <div
                       key={taskId}
@@ -509,11 +524,10 @@ const FarmCalendar = () => {
                               <button
                                 key={s.value}
                                 onClick={() => handleStatusChange(taskId, s.value)}
-                                className={`p-1 rounded ${
-                                  task.status === s.value
-                                    ? getPriorityBgClass(task.priority)
-                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                                }`}
+                                className={`p-1 rounded ${task.status === s.value
+                                  ? getPriorityBgClass(task.priority)
+                                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                  }`}
                                 title={s.label}
                               >
                                 <Icon size={14} />
@@ -559,8 +573,8 @@ const FarmCalendar = () => {
               const taskDate = new Date(t.date);
               return taskDate >= new Date() && t.status !== 'completed';
             }).length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">{t('noUpcomingTasks') || 'No upcoming tasks'}</p>
-            )}
+                <p className="text-sm text-gray-500 text-center py-4">{t('noUpcomingTasks') || 'No upcoming tasks'}</p>
+              )}
           </div>
         </div>
       </div>

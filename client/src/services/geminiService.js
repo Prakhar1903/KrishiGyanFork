@@ -1,16 +1,17 @@
 // src/services/geminiService.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize with your API key
-const genAI = new GoogleGenerativeAI("AIzaSyCcTXqMPLqBMAbL4F64g6ORfmcR5HZwozY");
+// Initialize with API key from environment
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const getGeminiResponse = async (userMessage) => {
   try {
     console.log('Sending request to Gemini API...');
-    
+
     // Get the generative model
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash-exp",
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -18,6 +19,10 @@ export const getGeminiResponse = async (userMessage) => {
         maxOutputTokens: 1024,
       }
     });
+
+    if (!API_KEY) {
+      throw new Error("API_KEY_MISSING");
+    }
 
     const prompt = `
       You are an agricultural assistant for Kerala farmers. Always respond in the same language as the user's question (English or Malayalam).
@@ -39,13 +44,13 @@ export const getGeminiResponse = async (userMessage) => {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
+
     console.log('Gemini response received:', text);
     return text;
 
   } catch (error) {
     console.error('Gemini API error details:', error);
-    
+
     // Provide more specific error messages
     if (error.message?.includes('API_KEY') || error.message?.includes('key')) {
       return "API key issue. Please check if your Gemini API key is properly set in the .env file.";
