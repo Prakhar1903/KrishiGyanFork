@@ -11,7 +11,7 @@ import {
 const UserProfileModal = ({ isOpen, onClose }) => {
   const { user, token, logout, refreshUser } = useAuth();
   const { t } = useLanguage();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   // Profile states
   const [profileForm, setProfileForm] = useState({
@@ -75,9 +75,9 @@ const UserProfileModal = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Profile update error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to update profile' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update profile'
       });
     } finally {
       setLoading(false);
@@ -122,9 +122,9 @@ const UserProfileModal = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Password change error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to change password' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to change password'
       });
     } finally {
       setLoading(false);
@@ -160,9 +160,9 @@ const UserProfileModal = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Account deletion error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to delete account' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete account'
       });
     } finally {
       setLoading(false);
@@ -199,8 +199,8 @@ const UserProfileModal = ({ isOpen, onClose }) => {
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex-1 py-3 px-4 rounded-md text-center font-medium transition-all ${activeTab === 'profile'
-                  ? 'bg-white text-primary-green shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-primary-green shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               <div className="flex items-center justify-center gap-2">
@@ -211,8 +211,8 @@ const UserProfileModal = ({ isOpen, onClose }) => {
             <button
               onClick={() => setActiveTab('password')}
               className={`flex-1 py-3 px-4 rounded-md text-center font-medium transition-all ${activeTab === 'password'
-                  ? 'bg-white text-primary-green shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-primary-green shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               <div className="flex items-center justify-center gap-2">
@@ -223,8 +223,8 @@ const UserProfileModal = ({ isOpen, onClose }) => {
             <button
               onClick={() => setActiveTab('delete')}
               className={`flex-1 py-3 px-4 rounded-md text-center font-medium transition-all ${activeTab === 'delete'
-                  ? 'bg-white text-red-600 shadow-sm'
-                  : 'text-gray-600 hover:text-red-600'
+                ? 'bg-white text-red-600 shadow-sm'
+                : 'text-gray-600 hover:text-red-600'
                 }`}
             >
               <div className="flex items-center justify-center gap-2">
@@ -238,8 +238,8 @@ const UserProfileModal = ({ isOpen, onClose }) => {
         {/* Message Display */}
         {message.text && (
           <div className={`mx-6 mt-4 p-4 rounded-lg border ${message.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-red-50 border-red-200 text-red-800'
+            ? 'bg-green-50 border-green-200 text-green-800'
+            : 'bg-red-50 border-red-200 text-red-800'
             }`}>
             <div className="flex items-center gap-2">
               {message.type === 'success' ? (

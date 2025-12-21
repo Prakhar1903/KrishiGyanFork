@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
-import { 
-  MessageCircle, Send, Search, Users, X, 
-  ChevronLeft, Check, CheckCheck, Phone, 
+import {
+  MessageCircle, Send, Search, Users, X,
+  ChevronLeft, Check, CheckCheck, Phone,
   Video, Info, Paperclip, Smile, MoreVertical,
   Clock, TrendingUp // ADDED THIS IMPORT
 } from 'lucide-react';
@@ -13,7 +13,7 @@ import axios from 'axios';
 const Chat = () => {
   const { user, token } = useAuth();
   const { t } = useLanguage();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -30,11 +30,11 @@ const Chat = () => {
     const config = {
       headers: {}
     };
-    
+
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return config;
   };
 
@@ -42,7 +42,7 @@ const Chat = () => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -54,7 +54,7 @@ const Chat = () => {
 
       // Set up interval to check for new messages
       const interval = setInterval(fetchConversations, 10000); // Every 10 seconds
-      
+
       return () => {
         clearInterval(interval);
         updateOnlineStatus(false);
@@ -72,7 +72,7 @@ const Chat = () => {
 
   const updateOnlineStatus = async (isOnline) => {
     if (!token) return;
-    
+
     try {
       const config = getAuthConfig();
       await axios.put(`${API_URL}/chat/status`, { isOnline }, config);
@@ -82,47 +82,47 @@ const Chat = () => {
   };
 
   // In Chat.jsx, update fetchConversations function:
-const fetchConversations = async () => {
-  if (!token) return;
-  
-  try {
-    const config = getAuthConfig();
-    
-    // Change this from /conversations to /users
-    const response = await axios.get(`${API_URL}/chat/users`, config);
-    const data = response.data.data || [];
-    
-    console.log('🔍 Users data:', data);
-    
-    // Transform users into conversation format
-    const transformedData = data.map(user => ({
-      userId: user._id,
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      location: user.location,
-      isOnline: user.isOnline,
-      lastSeen: user.lastSeen,
-      lastMessage: '', // No messages yet
-      lastTimestamp: user.createdAt, // Use creation date as fallback
-      unreadCount: 0 // No unread messages yet
-    }));
-    
-    setConversations(transformedData);
-    
-    // For now, unread count will be 0 since no messages
-    setUnreadCount(0);
-    
-    if (loading) setLoading(false);
-  } catch (error) {
-    console.error('Error fetching users:', error.response?.data || error.message);
-    setLoading(false);
-  }
-};
+  const fetchConversations = async () => {
+    if (!token) return;
+
+    try {
+      const config = getAuthConfig();
+
+      // Change this from /conversations to /users
+      const response = await axios.get(`${API_URL}/chat/users`, config);
+      const data = response.data.data || [];
+
+      console.log('🔍 Users data:', data);
+
+      // Transform users into conversation format
+      const transformedData = data.map(user => ({
+        userId: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        location: user.location,
+        isOnline: user.isOnline,
+        lastSeen: user.lastSeen,
+        lastMessage: '', // No messages yet
+        lastTimestamp: user.createdAt, // Use creation date as fallback
+        unreadCount: 0 // No unread messages yet
+      }));
+
+      setConversations(transformedData);
+
+      // For now, unread count will be 0 since no messages
+      setUnreadCount(0);
+
+      if (loading) setLoading(false);
+    } catch (error) {
+      console.error('Error fetching users:', error.response?.data || error.message);
+      setLoading(false);
+    }
+  };
 
   const fetchMessages = async (userId) => {
     if (!token) return;
-    
+
     try {
       const config = getAuthConfig();
       const response = await axios.get(`${API_URL}/chat/messages/${userId}`, config);
@@ -144,10 +144,10 @@ const fetchConversations = async () => {
       const config = getAuthConfig();
       const response = await axios.post(`${API_URL}/chat/send`, messageData, config);
       const newMsg = response.data.data;
-      
+
       setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
-      
+
       // Refresh conversations to update last message
       fetchConversations();
     } catch (error) {
@@ -198,7 +198,7 @@ const fetchConversations = async () => {
           </div>
           <h3 className="text-xl font-bold text-primary-green mb-2">Authentication Required</h3>
           <p className="text-natural-brown mb-4">Please log in to access the chat feature.</p>
-          <button 
+          <button
             onClick={() => window.location.href = '/login'}
             className="bg-gradient-to-r from-primary-green to-green-400 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           >
@@ -244,7 +244,7 @@ const fetchConversations = async () => {
                 {conversations.length} {t('conversations') || 'Conversations'}
               </h3>
               <p className="text-natural-brown">
-                {unreadCount > 0 
+                {unreadCount > 0
                   ? `${unreadCount} ${t('unreadMessages') || 'unread messages'}`
                   : t('allCaughtUp') || 'All caught up!'}
               </p>
@@ -302,9 +302,8 @@ const fetchConversations = async () => {
                 filteredConversations.map((conv) => (
                   <div
                     key={conv.userId || conv._id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 ${
-                      selectedUser?.userId === conv.userId ? 'bg-green-50' : ''
-                    }`}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 ${selectedUser?.userId === conv.userId ? 'bg-green-50' : ''
+                      }`}
                     onClick={() => handleSelectUser(conv)}
                   >
                     <div className="flex items-center gap-3">
@@ -356,7 +355,7 @@ const fetchConversations = async () => {
                 <div className="p-4 border-b bg-white flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {isMobileView && (
-                      <button 
+                      <button
                         onClick={() => setSelectedUser(null)}
                         className="p-1 hover:bg-gray-100 rounded-full"
                       >
@@ -374,7 +373,7 @@ const fetchConversations = async () => {
                     <div>
                       <h4 className="font-semibold text-gray-900">{selectedUser.name}</h4>
                       <p className="text-sm text-gray-600">
-                        {selectedUser.isOnline 
+                        {selectedUser.isOnline
                           ? t('online') || 'Online'
                           : `${t('lastSeen') || 'Last seen'} ${formatTime(selectedUser.lastSeen)}`
                         }
@@ -428,16 +427,16 @@ const fetchConversations = async () => {
                           className={`flex ${msg.sender?._id === user?._id ? 'justify-end' : 'justify-start'}`}
                         >
                           <div className="max-w-[70%]">
-                            <div className={`rounded-2xl px-4 py-2 ${msg.sender?._id === user?._id 
-                              ? 'bg-primary-green text-white rounded-br-none' 
+                            <div className={`rounded-2xl px-4 py-2 ${msg.sender?._id === user?._id
+                              ? 'bg-primary-green text-white rounded-br-none'
                               : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none'
-                            }`}>
+                              }`}>
                               <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                               <div className={`flex items-center gap-1 mt-1 ${msg.sender?._id === user?._id ? 'justify-end' : 'justify-start'}`}>
                                 <span className="text-xs opacity-75">
-                                  {new Date(msg.timestamp).toLocaleTimeString([], { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
+                                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                   })}
                                 </span>
                                 {msg.sender?._id === user?._id && (
@@ -477,11 +476,10 @@ const fetchConversations = async () => {
                     <button
                       onClick={sendMessage}
                       disabled={!newMessage.trim()}
-                      className={`p-3 rounded-full flex-shrink-0 ${
-                        newMessage.trim()
+                      className={`p-3 rounded-full flex-shrink-0 ${newMessage.trim()
                           ? 'bg-primary-green text-white hover:bg-green-700'
                           : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       <Send size={20} />
                     </button>

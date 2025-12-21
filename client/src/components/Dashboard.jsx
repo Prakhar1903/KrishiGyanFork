@@ -24,9 +24,9 @@ const Dashboard = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [volume, setVolume] = useState(0.3);
   const [audioError, setAudioError] = useState('');
-  
+
   const audioRef = useRef(null);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   const getAuthConfig = () => {
     const config = { headers: {} };
@@ -37,7 +37,7 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchUnreadCount();
-    
+
     // Initialize audio
     const initAudio = () => {
       try {
@@ -46,7 +46,7 @@ const Dashboard = () => {
         audio.loop = true;
         audio.volume = volume;
         audio.preload = 'metadata'; // Preload metadata for faster start
-        
+
         audioRef.current = audio;
 
         // Event listeners
@@ -79,7 +79,7 @@ const Dashboard = () => {
     };
 
     initAudio();
-    
+
     // Cleanup on unmount
     return () => {
       if (audioRef.current) {
@@ -136,7 +136,7 @@ const Dashboard = () => {
       } else {
         // Try to play audio
         const playPromise = audioRef.current.play();
-        
+
         if (playPromise !== undefined) {
           playPromise.catch(error => {
             console.error('Playback failed:', error);
@@ -203,20 +203,19 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
-      
+
       {/* Background Audio Control - Floating in bottom left */}
       <div className="fixed bottom-6 left-6 z-50">
         <div className="bg-white/95 backdrop-blur-md rounded-full shadow-xl p-2 flex items-center gap-3 border border-gray-200">
           <div className="relative">
             <button
               onClick={toggleAudio}
-              className={`p-3 rounded-full transition-all duration-200 ${
-                isAudioPlaying 
-                  ? 'bg-primary-green text-white shadow-lg' 
+              className={`p-3 rounded-full transition-all duration-200 ${isAudioPlaying
+                  ? 'bg-primary-green text-white shadow-lg'
                   : audioError
                     ? 'bg-red-100 text-red-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
               title={isAudioPlaying ? "Pause background audio" : audioError || "Play background audio"}
               aria-label={isAudioPlaying ? "Pause audio" : "Play audio"}
             >
@@ -227,13 +226,13 @@ const Dashboard = () => {
               ) : (
                 <VolumeX size={20} />
               )}
-              
+
               {/* Error indicator */}
               {audioError && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
               )}
             </button>
-            
+
             {/* Error tooltip */}
             {audioError && (
               <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-lg text-xs whitespace-nowrap z-50 shadow-lg">
@@ -241,7 +240,7 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-          
+
           {/* Volume controls (only show when playing) */}
           {isAudioPlaying && !audioError && (
             <div className="flex items-center gap-2 px-2 animate-fade-in">
@@ -294,8 +293,8 @@ const Dashboard = () => {
             >
               <div className="flex items-center space-x-4">
                 <div className={`p-3 rounded-lg ${stat.color === 'green' ? 'bg-primary-green' :
-                    stat.color === 'blue' ? 'bg-natural-sky' :
-                      stat.color === 'orange' ? 'bg-accent-gold' : 'bg-purple-500'
+                  stat.color === 'blue' ? 'bg-natural-sky' :
+                    stat.color === 'orange' ? 'bg-accent-gold' : 'bg-purple-500'
                   } text-white`}>
                   <Icon size={24} />
                 </div>

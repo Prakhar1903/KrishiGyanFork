@@ -16,13 +16,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (storedToken && userData) {
       setToken(storedToken);
       setUser(JSON.parse(userData));
@@ -59,18 +59,18 @@ export const AuthProvider = ({ children }) => {
       });
 
       const { token: newToken, user: userData } = response.data;
-      
+
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       setToken(newToken);
       setUser(userData);
-      
+
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed'
       };
     }
   };
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await axios.post(`${API_URL}/auth/register`, userData);
-      
+
       if (response.data.token) {
         const { token: newToken, user: newUser } = response.data;
         localStorage.setItem('token', newToken);
@@ -87,12 +87,12 @@ export const AuthProvider = ({ children }) => {
         setToken(newToken);
         setUser(newUser);
       }
-      
+
       return { success: true, message: response.data.message };
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Registration failed' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Registration failed'
       };
     }
   };
